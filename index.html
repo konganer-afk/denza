@@ -522,11 +522,11 @@
       <!-- Daily km -->
       <div class="input-group aos d1">
         <label class="input-label" for="sliderKm">
-          Daily Distance &nbsp;<span class="input-val" id="dispKm">40 km</span>
+          Daily Distance &nbsp;<span class="input-val" id="dispKm">35 km</span>
         </label>
         <div class="slider-row">
-          <input type="range" id="sliderKm" min="5" max="200" value="40" step="1">
-          <input type="number" id="numKm" class="num-input" min="1" max="500" value="40">
+          <input type="range" id="sliderKm" min="5" max="200" value="35" step="1">
+          <input type="number" id="numKm" class="num-input" min="1" max="500" value="35">
         </div>
       </div>
 
@@ -690,7 +690,7 @@ const ALL_DENZA = Object.assign({}, DENZA_EV, DENZA_PHEV);
 const S = {
   ice: null,
   denza: null,
-  dailyKm: 40,
+  dailyKm: 35,
   days: 5,
   fuelPrice: 1.85,
   elecPrice: 0.30,
@@ -710,7 +710,7 @@ function renderICE() {
     el.className = 'v-card' + (S.ice === key ? ' selected' : '');
     el.innerHTML =
       '<div class="v-card-label">' + key + '</div>' +
-      '<div class="v-card-sub">' + seg.l100 + ' L/100km &nbsp;·&nbsp; ' + seg.fuel +
+      '<div class="v-card-sub">' + seg.l100 + ' L/100km' +
       ' <span class="cite-chip">[' + seg.cite + ']</span></div>';
     el.addEventListener('click', () => { S.ice = key; renderICE(); calculate(); });
     grid.appendChild(el);
@@ -891,7 +891,7 @@ function updateAssumptions() {
 
   if (S.ice) {
     const ic = ICE_SEGMENTS[S.ice];
-    rows.push(['Current Vehicle', ic.name + ' — ' + ic.l100 + ' L/100km (' + ic.fuel + ')', 'Green Vehicle Guide <span class="cite-chip">[' + ic.cite + ']</span>']);
+    rows.push(['Current Vehicle', ic.name + ' — ' + ic.l100 + ' L/100km', 'Green Vehicle Guide <span class="cite-chip">[' + ic.cite + ']</span>']);
   } else {
     rows.push(['Current Vehicle', '—', '—']);
   }
