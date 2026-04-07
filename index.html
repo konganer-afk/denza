@@ -1155,18 +1155,20 @@ function generatePDF() {
   }
 
   // ---- DISCLAIMER ----
+  const dText = 'This calculator provides indicative figures and does not constitute financial advice. Results are based on user-provided inputs and national averages. Individual results will vary. Not a substitute for professional financial or automotive advice.';
+  const dLines = doc.splitTextToSize(dText, W - 8);
+  const dBoxH = 10 + dLines.length * 5;
   doc.setDrawColor(26, 59, 181); doc.setLineWidth(0.9);
-  doc.line(L, y, L, y + 22); doc.setLineWidth(0.2);
+  doc.line(L, y, L, y + dBoxH); doc.setLineWidth(0.2);
   doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(10, 10, 10);
   doc.text('GENERAL ESTIMATE ONLY', L + 4, y + 6);
   doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 120, 120);
-  const dText = 'This calculator provides indicative figures and does not constitute financial advice. Results are based on user-provided inputs and national averages. Individual results will vary. Not a substitute for professional financial or automotive advice.';
-  doc.text(doc.splitTextToSize(dText, W - 8), L + 4, y + 13);
+  doc.text(dLines, L + 4, y + 13);
+  y += dBoxH + 6;
 
   // ---- PAGE FOOTER ----
-  const ph = doc.internal.pageSize.getHeight();
-  doc.setFontSize(7); doc.setTextColor(180, 180, 180);
-  doc.text('General estimates only. Not financial advice. Data sources: ABS, DISER, AEMO, Green Vehicle Guide.', L, ph - 8);
+  doc.setFontSize(7); doc.setTextColor(200, 200, 200);
+  doc.text('General estimates only. Not financial advice. Data sources: ABS, DISER, AEMO, Green Vehicle Guide.', L, y);
 
   // Save
   const fname = 'DENZA_Savings_' + r.denza.name.replace(/ /g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
