@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DENZA Savings Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* ===== DESIGN TOKENS ===== */
+    :root {
+      --bg: #F5F0E8;
+      --blue: #1A3BB5;
+      --black: #0A0A0A;
+      --white: #FFFFFF;
+      --dark-section: #0D0D0D;
+      --muted: #6B6B6B;
+      --card-bg: #FFFFFF;
+      --card-border: #E0D8CC;
+      --input-bg: #FFFFFF;
+      --input-border: #C8BFB0;
+      --section-label-color: #8A7F72;
+      --surface: #EDE8DF;
+      --shadow: rgba(10,10,10,0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #111111;
+      --black: #F0ECE4;
+      --white: #1C1C1C;
+      --card-bg: #1C1C1C;
+      --card-border: #333333;
+      --input-bg: #1C1C1C;
+      --input-border: #444444;
+      --section-label-color: #888888;
+      --surface: #1A1A1A;
+      --muted: #999999;
+      --shadow: rgba(0,0,0,0.4);
+    }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Barlow', sans-serif;
+      background: var(--bg);
+      color: var(--black);
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+
+    /* ===== HEADER ===== */
+    .site-header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 0 2rem; height: 52px;
+      display: flex; align-items: center; justify-content: space-between;
+      background: transparent; transition: background 0.3s;
+    }
+    .site-header.scrolled {
+      background: rgba(245,240,232,0.92);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    [data-theme="dark"] .site-header.scrolled { background: rgba(17,17,17,0.92); }
+    .header-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900; font-size: 1.05rem;
+      letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--black); text-decoration: none;
+    }
+    .theme-toggle {
+      background: none; border: 1.5px solid var(--card-border);
+      color: var(--black); border-radius: 4px;
+      padding: 0.28rem 0.75rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.72rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .theme-toggle:hover { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    /* ===== HERO ===== */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 2rem 5rem;
+      background: var(--bg);
+    }
+    .hero-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.72rem;
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: var(--blue); margin-bottom: 1.5rem;
+    }
+    .hero-brand {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(5rem, 18vw, 11rem);
+      letter-spacing: 0.14em; text-transform: uppercase;
+      line-height: 0.88; color: var(--black);
+    }
+    .hero-subtitle {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700;
+      font-size: clamp(1rem, 3.5vw, 1.75rem);
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: var(--blue); margin-top: 0.6rem; margin-bottom: 2rem;
+    }
+    .hero-tagline {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: clamp(0.9rem, 2vw, 1.15rem);
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 3.5rem;
+    }
+    .hero-cta {
+      display: inline-flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.78rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--black); text-decoration: none; transition: color 0.2s;
+    }
+    .hero-cta:hover { color: var(--blue); }
+    .cta-arrow {
+      width: 22px; height: 22px;
+      border-right: 2.5px solid currentColor;
+      border-bottom: 2.5px solid currentColor;
+      transform: rotate(45deg);
+      animation: cta-bounce 1.6s ease-in-out infinite;
+    }
+    @keyframes cta-bounce {
+      0%, 100% { transform: rotate(45deg) translateY(0); }
+      50% { transform: rotate(45deg) translateY(7px); }
+    }
+
+    /* ===== SECTION SCAFFOLDING ===== */
+    .section-wrap { padding: 5rem 2rem; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: var(--section-label-color); margin-bottom: 0.65rem;
+    }
+    .section-heading {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      line-height: 1; color: var(--black); margin-bottom: 2.5rem;
+    }
+    .divider { width: 100%; height: 1px; background: var(--card-border); }
+
+    /* ===== SCROLL ANIMATIONS ===== */
+    .aos {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .aos.d1 { transition-delay: 0.1s; }
+    .aos.d2 { transition-delay: 0.2s; }
+    .aos.d3 { transition-delay: 0.3s; }
+    .aos.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===== MODEL SELECTION ===== */
+    .selection-cols {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;
+    }
+    @media (max-width: 680px) { .selection-cols { grid-template-columns: 1fr; } }
+    .col-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.28em; text-transform: uppercase;
+      color: var(--section-label-color); margin-bottom: 0.9rem;
+    }
+    .cards-stack { display: flex; flex-direction: column; gap: 0.6rem; }
+    .card-group-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.65rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--section-label-color);
+      margin-top: 0.9rem; margin-bottom: 0.25rem;
+    }
+    .v-card {
+      background: var(--card-bg); border: 1.5px solid var(--card-border);
+      border-radius: 6px; padding: 0.85rem 1.1rem;
+      cursor: pointer; transition: all 0.18s; user-select: none;
+    }
+    .v-card:hover { border-color: var(--blue); box-shadow: 0 4px 18px var(--shadow); transform: translateY(-1px); }
+    .v-card.selected { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .v-card-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 0.98rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--black); line-height: 1.2;
+    }
+    .v-card.selected .v-card-label { color: #fff; }
+    .v-card-sub {
+      font-size: 0.78rem; color: var(--muted); margin-top: 0.18rem; font-weight: 500;
+    }
+    .v-card.selected .v-card-sub { color: rgba(255,255,255,0.68); }
+    .v-badge {
+      display: inline-block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.62rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.12rem 0.45rem; border-radius: 3px; margin-top: 0.35rem;
+      background: rgba(26,59,181,0.09); color: var(--blue);
+    }
+    .v-card.selected .v-badge { background: rgba(255,255,255,0.18); color: #fff; }
+    .cite-chip {
+      display: inline-block; font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.62rem;
+      background: rgba(26,59,181,0.08); color: var(--blue);
+      padding: 0.08rem 0.38rem; border-radius: 3px; margin-left: 0.3rem;
+    }
+    .v-card.selected .cite-chip { background: rgba(255,255,255,0.18); color: #fff; }
+    .segment-note {
+      margin-top: 1.5rem; font-size: 0.78rem;
+      color: var(--muted); line-height: 1.6; font-style: italic;
+    }
+
+    /* ===== INPUTS ===== */
+    .inputs-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 2.5rem 3rem;
+    }
+    @media (max-width: 580px) { .inputs-grid { grid-template-columns: 1fr; } }
+    .input-group { display: flex; flex-direction: column; gap: 0.45rem; }
+    .input-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--section-label-color);
+    }
+    .input-val { color: var(--blue); }
+    .slider-row { display: flex; align-items: center; gap: 0.7rem; }
+    input[type="range"] {
+      -webkit-appearance: none; flex: 1; height: 4px;
+      background: var(--card-border); border-radius: 2px; outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--blue); cursor: pointer;
+      border: 3px solid var(--bg); box-shadow: 0 0 0 1.5px var(--blue);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--blue); cursor: pointer; border: 3px solid var(--bg);
+    }
+    .num-input {
+      width: 74px; padding: 0.38rem 0.45rem;
+      border: 1.5px solid var(--input-border); border-radius: 4px;
+      background: var(--input-bg); color: var(--black);
+      font-family: 'Barlow', sans-serif; font-size: 0.88rem; font-weight: 600;
+      text-align: center; outline: none; transition: border-color 0.2s;
+    }
+    .num-input:focus { border-color: var(--blue); }
+    .price-wrap {
+      display: flex; align-items: center;
+      border: 1.5px solid var(--input-border); border-radius: 4px;
+      overflow: hidden; background: var(--input-bg); transition: border-color 0.2s;
+    }
+    .price-wrap:focus-within { border-color: var(--blue); }
+    .price-affix {
+      padding: 0.48rem 0.6rem; background: var(--surface); color: var(--muted);
+      font-size: 0.82rem; font-weight: 600; white-space: nowrap;
+      border-right: 1px solid var(--input-border);
+    }
+    .price-affix.right { border-right: none; border-left: 1px solid var(--input-border); }
+    .price-input {
+      flex: 1; padding: 0.48rem 0.5rem; border: none;
+      background: transparent; color: var(--black);
+      font-family: 'Barlow', sans-serif; font-size: 0.88rem; font-weight: 600;
+      outline: none;
+    }
+    .input-caption { font-size: 0.72rem; color: var(--muted); line-height: 1.45; }
+
+    /* ===== RESULTS (DARK) ===== */
+    .results-wrap {
+      background: var(--dark-section); color: #fff; padding: 5rem 2rem 4.5rem;
+    }
+    .results-inner { max-width: 1100px; margin: 0 auto; }
+    .results-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.7rem;
+      letter-spacing: 0.38em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35); margin-bottom: 0.65rem;
+    }
+    .results-heading {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      color: #fff; margin-bottom: 3rem;
+    }
+    .results-empty {
+      text-align: center; padding: 3.5rem 1rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.85rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* Savings hero */
+    .savings-hero { text-align: center; margin-bottom: 4rem; }
+    .savings-earns {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.75rem;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: rgba(255,255,255,0.42); margin-bottom: 0.4rem;
+    }
+    .savings-big {
+      display: inline-flex; align-items: flex-start;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(4.5rem, 14vw, 8.5rem);
+      letter-spacing: -0.02em; line-height: 1; color: #fff;
+    }
+    .savings-currency { font-size: 0.33em; margin-top: 0.28em; margin-right: 0.06em; opacity: 0.65; }
+    .savings-sup { font-size: 0.18em; margin-top: 0.35em; color: var(--blue); align-self: flex-start; }
+    .savings-period {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.75rem;
+      letter-spacing: 0.32em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35); margin-top: 0.6rem;
+    }
+
+    /* Metrics */
+    .metrics-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem; margin-bottom: 3.5rem;
+    }
+    @media (max-width: 580px) { .metrics-row { grid-template-columns: 1fr; } }
+    .metric-tile {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 6px; padding: 1.2rem; text-align: center;
+    }
+    .metric-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.65rem;
+      letter-spacing: 0.25em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35); margin-bottom: 0.45rem;
+    }
+    .metric-val {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: clamp(1.4rem, 3.5vw, 2rem);
+      color: #fff; line-height: 1.1;
+    }
+    .metric-cite { font-size: 0.55em; vertical-align: super; color: var(--blue); }
+
+    /* Chart */
+    .chart-wrap { margin-top: 0.5rem; }
+    .chart-lbl {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.68rem;
+      letter-spacing: 0.25em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); margin-bottom: 1.25rem;
+    }
+    .chart-bars { display: flex; gap: 2rem; align-items: flex-end; height: 140px; }
+    .chart-group {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; height: 100%; justify-content: flex-end;
+    }
+    .chart-amt {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.78rem;
+      color: rgba(255,255,255,0.55); margin-bottom: 0.35rem;
+    }
+    .chart-bar {
+      width: 100%; border-radius: 3px 3px 0 0;
+      transition: height 0.85s cubic-bezier(0.25,0.46,0.45,0.94);
+    }
+    .bar-ice { background: rgba(255,255,255,0.18); }
+    .bar-denza { background: var(--blue); }
+    .chart-axis { width: 100%; height: 1px; background: rgba(255,255,255,0.1); }
+    .chart-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.68rem;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35); margin-top: 0.55rem; text-align: center;
+    }
+
+    /* ===== DOWNLOAD ===== */
+    .download-wrap { background: var(--surface); padding: 4rem 2rem; }
+    .download-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+    }
+    @media (max-width: 680px) { .download-inner { flex-direction: column; align-items: flex-start; } }
+    .download-text h3 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 900;
+      font-size: clamp(1.4rem, 3.5vw, 2rem);
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--black); margin-bottom: 0.3rem;
+    }
+    .download-text p { font-size: 0.83rem; color: var(--muted); line-height: 1.55; }
+    .btn-pdf {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 0.88rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      background: var(--blue); color: #fff;
+      border: none; border-radius: 5px;
+      padding: 1rem 2.5rem; cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-pdf:hover { background: #1530a0; transform: translateY(-1px); box-shadow: 0 6px 22px rgba(26,59,181,0.28); }
+    .btn-pdf:disabled { opacity: 0.38; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ===== ASSUMPTIONS ===== */
+    .assumptions-wrap { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .assumptions-table {
+      width: 100%; border-collapse: collapse; font-size: 0.83rem; margin-top: 0.5rem;
+    }
+    .assumptions-table th {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.68rem;
+      letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--section-label-color);
+      padding: 0.55rem 1rem 0.55rem 0; text-align: left;
+      border-bottom: 1.5px solid var(--card-border);
+    }
+    .assumptions-table td {
+      padding: 0.62rem 1rem 0.62rem 0;
+      border-bottom: 1px solid var(--card-border);
+      color: var(--black); line-height: 1.4; vertical-align: top;
+    }
+    .assumptions-table td:last-child { color: var(--muted); font-size: 0.78rem; }
+
+    /* Citation key */
+    .citation-key { margin-top: 2.5rem; }
+    .citation-key-heading {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800; font-size: 0.72rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--section-label-color); margin-bottom: 0.75rem;
+    }
+    .citation-list {
+      list-style: none;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.38rem 2rem;
+    }
+    @media (max-width: 680px) { .citation-list { grid-template-columns: 1fr; } }
+    .citation-list li { font-size: 0.78rem; color: var(--muted); line-height: 1.5; display: flex; gap: 0.45rem; }
+    .cite-key { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; color: var(--blue); white-space: nowrap; flex-shrink: 0; }
+
+    /* Disclaimer */
+    .disclaimer-box {
+      margin-top: 2.5rem;
+      background: var(--surface);
+      border-left: 3px solid var(--blue);
+      padding: 1.05rem 1.2rem; border-radius: 0 4px 4px 0;
+    }
+    .disclaimer-box p { font-size: 0.78rem; color: var(--muted); line-height: 1.65; }
+
+    /* ===== FOOTER ===== */
+    .site-footer {
+      border-top: 1px solid var(--card-border);
+      padding: 1.4rem 2rem; text-align: center;
+    }
+    .site-footer p { font-size: 0.73rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header" id="siteHeader">
+  <a href="#" class="header-brand">DENZA</a>
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">Dark Mode</button>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">DENZA Australia — Sales Consultation Tool</div>
+  <div class="hero-brand">DENZA</div>
+  <div class="hero-subtitle">Savings Calculator</div>
+  <div class="hero-tagline">The Brave Go First</div>
+  <a href="#selection" class="hero-cta">
+    <span>Discover Your Number</span>
+    <span class="cta-arrow"></span>
+  </a>
+</section>
+
+<div class="divider"></div>
+
+<!-- MODEL SELECTION -->
+<section id="selection" class="section-wrap">
+  <div class="section-inner">
+    <div class="aos">
+      <div class="section-eyebrow">Step 1 — Choose Vehicles</div>
+      <div class="section-heading">Build Your Comparison</div>
+    </div>
+    <div class="selection-cols">
+      <div class="aos d1">
+        <div class="col-label">Your Current Vehicle</div>
+        <div class="cards-stack" id="iceGrid"></div>
+      </div>
+      <div class="aos d2">
+        <div class="col-label">Your New DENZA</div>
+        <div class="cards-stack" id="denzaGrid"></div>
+      </div>
+    </div>
+    <p class="segment-note aos d3">
+      For accurate comparisons, use vehicles of the same segment (e.g. large SUV vs large SUV).
+      Recommended pairings: D9 AWD ↔ Average Large MPV &nbsp;·&nbsp; B5 ↔ Average Mid-Size SUV &nbsp;·&nbsp; B8 ↔ Average Large SUV or Average Luxury SUV.
+    </p>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- INPUTS -->
+<section id="inputs" class="section-wrap">
+  <div class="section-inner">
+    <div class="aos">
+      <div class="section-eyebrow">Step 2 — Your Driving Habits</div>
+      <div class="section-heading">Enter Your Details</div>
+    </div>
+    <div class="inputs-grid">
+
+      <!-- Daily km -->
+      <div class="input-group aos d1">
+        <label class="input-label" for="sliderKm">
+          Daily Distance &nbsp;<span class="input-val" id="dispKm">40 km</span>
+        </label>
+        <div class="slider-row">
+          <input type="range" id="sliderKm" min="5" max="200" value="40" step="1">
+          <input type="number" id="numKm" class="num-input" min="1" max="500" value="40">
+        </div>
+      </div>
+
+      <!-- Days/week -->
+      <div class="input-group aos d2">
+        <label class="input-label" for="sliderDays">
+          Days per Week &nbsp;<span class="input-val" id="dispDays">5 days</span>
+        </label>
+        <div class="slider-row">
+          <input type="range" id="sliderDays" min="1" max="7" value="5" step="1">
+          <input type="number" id="numDays" class="num-input" min="1" max="7" value="5">
+        </div>
+      </div>
+
+      <!-- Fuel price -->
+      <div class="input-group aos d1">
+        <label class="input-label">Fuel Price</label>
+        <div class="price-wrap">
+          <span class="price-affix">AUD $</span>
+          <input type="number" id="fuelPrice" class="price-input" min="0.5" max="5" step="0.01" value="1.85">
+          <span class="price-affix right">/ Litre</span>
+        </div>
+        <span class="input-caption">Default: ABS/DISER national average. Enter your local price for accuracy. <span class="cite-chip">[P1]</span></span>
+      </div>
+
+      <!-- Electricity price -->
+      <div class="input-group aos d2">
+        <label class="input-label">Electricity Price</label>
+        <div class="price-wrap">
+          <span class="price-affix">AUD $</span>
+          <input type="number" id="elecPrice" class="price-input" min="0.05" max="2" step="0.01" value="0.30">
+          <span class="price-affix right">/ kWh</span>
+        </div>
+        <span class="input-caption">Default: AEMO national average. Enter your plan's rate for accuracy. <span class="cite-chip">[P2]</span></span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- RESULTS -->
+<section class="results-wrap" id="results">
+  <div class="results-inner">
+    <div class="results-eyebrow">The Numbers</div>
+    <div class="results-heading">What Switching Earns You</div>
+    <div id="resultsBody">
+      <div class="results-empty">SELECT A CURRENT VEHICLE AND A DENZA MODEL ABOVE TO SEE YOUR SAVINGS</div>
+    </div>
+  </div>
+</section>
+
+<!-- PDF DOWNLOAD -->
+<div class="download-wrap">
+  <div class="download-inner">
+    <div class="download-text">
+      <h3>Take the Numbers Home</h3>
+      <p>Download a professional summary to share with your partner or review at your own pace.</p>
+    </div>
+    <button class="btn-pdf" id="btnPDF" onclick="generatePDF()" disabled>Download PDF Summary</button>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ASSUMPTIONS — always visible, never collapsible -->
+<div class="assumptions-wrap" id="assumptionsAnchor">
+  <div class="aos">
+    <div class="section-eyebrow">Transparency</div>
+    <div class="section-heading">Assumptions &amp; Data Sources</div>
+  </div>
+  <div class="aos d1">
+    <table class="assumptions-table">
+      <thead>
+        <tr><th>Parameter</th><th>Value Used</th><th>Source</th></tr>
+      </thead>
+      <tbody id="assumptionsTbody"></tbody>
+    </table>
+  </div>
+  <div class="citation-key aos d2">
+    <div class="citation-key-heading">Citation &amp; Formula Key</div>
+    <ul class="citation-list">
+      <li><span class="cite-key">[P1]</span><span>Fuel price default — ABS/DISER national average (2024). User-editable.</span></li>
+      <li><span class="cite-key">[P2]</span><span>Electricity price default — AEMO national average (2024). User-editable.</span></li>
+      <li><span class="cite-key">[C1]</span><span>ICE Annual Cost = Annual km × (L/100km ÷ 100) × Fuel price per litre</span></li>
+      <li><span class="cite-key">[C2]</span><span>Annual Distance = Daily commute km × Days/week × 52 weeks</span></li>
+      <li><span class="cite-key">[S1] EV</span><span>DENZA Annual Cost = (Annual km ÷ 100) × kWh/100km × Electricity price</span></li>
+      <li><span class="cite-key">[S1] PHEV</span><span>DENZA Annual Cost = Annual km × (L/100km ÷ 100 × Fuel price + Wh/km ÷ 1000 × Electricity price)</span></li>
+      <li><span class="cite-key">[S2]</span><span>Monthly Saving = Annual Saving ÷ 12</span></li>
+      <li><span class="cite-key">[V1]</span><span>% Saving = (Annual Saving ÷ ICE Annual Cost) × 100</span></li>
+      <li><span class="cite-key">[I1]</span><span>Average Large SUV — 8.9 L/100km — Green Vehicle Guide (Diesel, 3.3L 6cyl Turbo, 10-spd Auto, 4WD)</span></li>
+      <li><span class="cite-key">[I2]</span><span>Average Mid-Size SUV — 7.6 L/100km — Green Vehicle Guide (Diesel, 2.8L 4cyl Turbo, 8-spd Auto, 4WD)</span></li>
+      <li><span class="cite-key">[I3]</span><span>Average Luxury SUV — 9.9 L/100km — Green Vehicle Guide (Petrol 95RON, 3.0L 6cyl Turbo, 8-spd Auto, 4WD)</span></li>
+      <li><span class="cite-key">[I4]</span><span>Average Large MPV — 9.6 L/100km — Green Vehicle Guide (Petrol 91RON, 3.5L 6cyl, 8-spd Auto)</span></li>
+      <li><span class="cite-key">[D1]</span><span>Denza D9 AWD — 25.6 kWh/100km — GVG / MY26 spec sheet (derived: 103.36 kWh ÷ 480 km WLTC × 1000). Pure EV.</span></li>
+      <li><span class="cite-key">[D2]</span><span>Denza B5 — 1.9 L/100km + 233 Wh/km — GVG / MY26 spec sheet (PHEV combined, SOC 25%–100%)</span></li>
+      <li><span class="cite-key">[D3]</span><span>Denza B8 — 2.0 L/100km + 244 Wh/km — GVG / MY26 spec sheet (PHEV combined, SOC 25%–100%)</span></li>
+    </ul>
+  </div>
+  <div class="disclaimer-box aos d3">
+    <p><strong>General Estimate Only.</strong> This calculator provides indicative figures and does not constitute financial advice. Results are based on user-provided inputs and national averages. Individual results will vary. Not a substitute for professional financial or automotive advice.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <p>General estimates only. Not financial advice. Data sources: ABS, DISER, AEMO, Green Vehicle Guide.</p>
+</footer>
+
+<script>
+// =============================================================================
+// DATA MODEL — all vehicle data here, nothing hardcoded in UI functions
+// =============================================================================
+
+const DENZA_EV = {
+  "DENZA D9 AWD": {
+    name: "Denza D9 AWD",
+    val: 25.6,      // kWh/100km — GVG / MY26 spec sheet
+    unit: "kWh/100km",
+    type: "EV",
+    badge: "Pure EV",
+    cite: "D1"
+  }
+};
+
+const DENZA_PHEV = {
+  "DENZA B5": {
+    name: "Denza B5",
+    val: 1.9,       // L/100km — GVG / MY26 spec sheet (PHEV, SOC 25%–100%)
+    unit: "L/100km",
+    wh_km: 233,     // Wh/km — GVG / MY26 spec sheet
+    type: "PHEV",
+    badge: "Super Hybrid",
+    cite: "D2"
+  },
+  "DENZA B8": {
+    name: "Denza B8",
+    val: 2.0,       // L/100km — GVG / MY26 spec sheet (PHEV, SOC 25%–100%)
+    unit: "L/100km",
+    wh_km: 244,     // Wh/km — GVG / MY26 spec sheet
+    type: "PHEV",
+    badge: "Super Hybrid",
+    cite: "D3"
+  }
+};
+
+const ICE_SEGMENTS = {
+  "AVERAGE LARGE SUV":    { name: "Average Large SUV",    l100: 8.9, fuel: "Diesel",       cite: "I1" },
+  "AVERAGE MID-SIZE SUV": { name: "Average Mid-Size SUV", l100: 7.6, fuel: "Diesel",       cite: "I2" },
+  "AVERAGE LUXURY SUV":   { name: "Average Luxury SUV",   l100: 9.9, fuel: "Petrol 95RON", cite: "I3" },
+  "AVERAGE LARGE MPV":    { name: "Average Large MPV",    l100: 9.6, fuel: "Petrol 91RON", cite: "I4" }
+};
+
+const ALL_DENZA = Object.assign({}, DENZA_EV, DENZA_PHEV);
+
+// =============================================================================
+// APPLICATION STATE
+// =============================================================================
+
+const S = {
+  ice: null,
+  denza: null,
+  dailyKm: 40,
+  days: 5,
+  fuelPrice: 1.85,
+  elecPrice: 0.30,
+  results: null,
+  resultsVisible: false
+};
+
+// =============================================================================
+// CARD RENDERING
+// =============================================================================
+
+function renderICE() {
+  const grid = document.getElementById('iceGrid');
+  grid.innerHTML = '';
+  for (const [key, seg] of Object.entries(ICE_SEGMENTS)) {
+    const el = document.createElement('div');
+    el.className = 'v-card' + (S.ice === key ? ' selected' : '');
+    el.innerHTML =
+      '<div class="v-card-label">' + key + '</div>' +
+      '<div class="v-card-sub">' + seg.l100 + ' L/100km &nbsp;·&nbsp; ' + seg.fuel +
+      ' <span class="cite-chip">[' + seg.cite + ']</span></div>';
+    el.addEventListener('click', () => { S.ice = key; renderICE(); calculate(); });
+    grid.appendChild(el);
+  }
+}
+
+function renderDenza() {
+  const grid = document.getElementById('denzaGrid');
+  grid.innerHTML = '';
+
+  const evLbl = document.createElement('div');
+  evLbl.className = 'card-group-label';
+  evLbl.textContent = 'Pure EV';
+  grid.appendChild(evLbl);
+
+  for (const [key, m] of Object.entries(DENZA_EV)) {
+    grid.appendChild(buildDenzaCard(key, m));
+  }
+
+  const phevLbl = document.createElement('div');
+  phevLbl.className = 'card-group-label';
+  phevLbl.textContent = 'Super Hybrid (PHEV)';
+  grid.appendChild(phevLbl);
+
+  for (const [key, m] of Object.entries(DENZA_PHEV)) {
+    grid.appendChild(buildDenzaCard(key, m));
+  }
+}
+
+function buildDenzaCard(key, m) {
+  const cons = m.type === 'EV'
+    ? m.val + ' kWh/100km'
+    : m.val + ' L/100km + ' + m.wh_km + ' Wh/km';
+  const el = document.createElement('div');
+  el.className = 'v-card' + (S.denza === key ? ' selected' : '');
+  el.innerHTML =
+    '<div class="v-card-label">' + key + '</div>' +
+    '<div class="v-card-sub">' + cons + ' <span class="cite-chip">[' + m.cite + ']</span></div>' +
+    '<span class="v-badge">' + m.badge + '</span>';
+  el.addEventListener('click', () => { S.denza = key; renderDenza(); calculate(); });
+  return el;
+}
+
+// =============================================================================
+// CALCULATION ENGINE — [C1][C2][S1][S2][V1]
+// =============================================================================
+
+function calculate() {
+  if (!S.ice || !S.denza) {
+    S.results = null;
+    renderResults();
+    return;
+  }
+
+  const ice = ICE_SEGMENTS[S.ice];
+  const denza = ALL_DENZA[S.denza];
+
+  const annKm     = S.dailyKm * S.days * 52;                          // [C2]
+  const costICE   = annKm * (ice.l100 / 100) * S.fuelPrice;           // [C1]
+
+  let costDenza;
+  if (denza.type === 'EV') {
+    costDenza = (annKm / 100) * denza.val * S.elecPrice;               // [S1] EV
+  } else {
+    costDenza = annKm * (denza.val / 100 * S.fuelPrice + denza.wh_km / 1000 * S.elecPrice); // [S1] PHEV
+  }
+
+  const saving    = costICE - costDenza;                               // annual saving
+  const monthly   = saving / 12;                                       // [S2]
+  const pct       = (saving / costICE) * 100;                         // [V1]
+
+  S.results = { annKm, costICE, costDenza, saving, monthly, pct, ice, denza };
+
+  renderResults();
+  updateAssumptions();
+  document.getElementById('btnPDF').disabled = false;
+}
+
+// =============================================================================
+// RESULTS RENDERING
+// =============================================================================
+
+const au = (n) => Math.abs(Math.round(n)).toLocaleString('en-AU');
+const money = (n) => '$' + au(n);
+
+function renderResults() {
+  const body = document.getElementById('resultsBody');
+  if (!S.results) {
+    body.innerHTML = '<div class="results-empty">SELECT A CURRENT VEHICLE AND A DENZA MODEL ABOVE TO SEE YOUR SAVINGS</div>';
+    return;
+  }
+
+  const r = S.results;
+  body.innerHTML =
+    // Savings hero
+    '<div class="savings-hero">' +
+      '<div class="savings-earns">What Switching Earns You Every Year</div>' +
+      '<div class="savings-big">' +
+        '<span class="savings-currency">$</span>' +
+        '<span id="countUp">' + au(r.saving) + '</span>' +
+        '<span class="savings-sup">[S1]</span>' +
+      '</div>' +
+      '<div class="savings-period">AUD per year &nbsp;·&nbsp; ' + money(r.monthly) + ' per month<span style="font-size:0.65em;vertical-align:super;color:var(--blue);margin-left:2px">[S2]</span></div>' +
+    '</div>' +
+
+    // Metrics
+    '<div class="metrics-row">' +
+      '<div class="metric-tile"><div class="metric-lbl">Annual Saving</div><div class="metric-val">' + money(r.saving) + '<span class="metric-cite">[S1]</span></div></div>' +
+      '<div class="metric-tile"><div class="metric-lbl">Monthly Saving</div><div class="metric-val">' + money(r.monthly) + '<span class="metric-cite">[S2]</span></div></div>' +
+      '<div class="metric-tile"><div class="metric-lbl">Cost Reduction</div><div class="metric-val">' + Math.round(r.pct) + '%<span class="metric-cite">[V1]</span></div></div>' +
+    '</div>' +
+
+    // Chart
+    '<div class="chart-wrap">' +
+      '<div class="chart-lbl">Annual Running Cost Comparison</div>' +
+      '<div class="chart-bars">' +
+        '<div class="chart-group">' +
+          '<div class="chart-amt" id="amtICE">' + money(r.costICE) + '</div>' +
+          '<div class="chart-bar bar-ice" id="barICE" style="height:0"></div>' +
+          '<div class="chart-axis"></div>' +
+          '<div class="chart-name">' + r.ice.name + '</div>' +
+        '</div>' +
+        '<div class="chart-group">' +
+          '<div class="chart-amt" id="amtDenza">' + money(r.costDenza) + '</div>' +
+          '<div class="chart-bar bar-denza" id="barDenza" style="height:0"></div>' +
+          '<div class="chart-axis"></div>' +
+          '<div class="chart-name">' + r.denza.name + '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  // Animate bars after paint
+  setTimeout(animateBars, 60);
+
+  // Trigger count-up if already in view
+  if (S.resultsVisible) countUp(r.saving);
+}
+
+function animateBars() {
+  if (!S.results) return;
+  const r = S.results;
+  const max = Math.max(r.costICE, r.costDenza);
+  const maxH = 110;
+  const b1 = document.getElementById('barICE');
+  const b2 = document.getElementById('barDenza');
+  if (b1) b1.style.height = ((r.costICE / max) * maxH) + 'px';
+  if (b2) b2.style.height = ((r.costDenza / max) * maxH) + 'px';
+}
+
+// =============================================================================
+// COUNT-UP ANIMATION — savings number on scroll entry
+// =============================================================================
+
+function countUp(target) {
+  const el = document.getElementById('countUp');
+  if (!el) return;
+  const duration = 1800;
+  const t0 = performance.now();
+  function step(t) {
+    const progress = Math.min((t - t0) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    el.textContent = Math.round(target * eased).toLocaleString('en-AU');
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// =============================================================================
+// ASSUMPTIONS TABLE
+// =============================================================================
+
+function updateAssumptions() {
+  const tbody = document.getElementById('assumptionsTbody');
+  if (!tbody) return;
+
+  const annKm = S.dailyKm * S.days * 52;
+  const rows = [];
+
+  if (S.ice) {
+    const ic = ICE_SEGMENTS[S.ice];
+    rows.push(['Current Vehicle', ic.name + ' — ' + ic.l100 + ' L/100km (' + ic.fuel + ')', 'Green Vehicle Guide <span class="cite-chip">[' + ic.cite + ']</span>']);
+  } else {
+    rows.push(['Current Vehicle', '—', '—']);
+  }
+
+  if (S.denza) {
+    const d = ALL_DENZA[S.denza];
+    const c = d.type === 'EV' ? d.val + ' kWh/100km' : d.val + ' L/100km + ' + d.wh_km + ' Wh/km (PHEV combined)';
+    rows.push(['DENZA Model', d.name + ' — ' + c, 'GVG / MY26 Spec Sheet <span class="cite-chip">[' + d.cite + ']</span>']);
+  } else {
+    rows.push(['DENZA Model', '—', '—']);
+  }
+
+  rows.push(['Daily Commute',      S.dailyKm + ' km',                           'User input']);
+  rows.push(['Days per Week',      S.days + (S.days === 1 ? ' day' : ' days'),  'User input']);
+  rows.push(['Annual Distance',    annKm.toLocaleString('en-AU') + ' km',       '<span class="cite-chip">[C2]</span>']);
+  rows.push(['Fuel Price',         '$' + S.fuelPrice.toFixed(2) + ' AUD/Litre', 'ABS/DISER <span class="cite-chip">[P1]</span>']);
+  rows.push(['Electricity Price',  '$' + S.elecPrice.toFixed(2) + ' AUD/kWh',  'AEMO <span class="cite-chip">[P2]</span>']);
+
+  if (S.results) {
+    const r = S.results;
+    rows.push(['ICE Annual Cost',   money(r.costICE),  '<span class="cite-chip">[C1]</span>']);
+    rows.push(['DENZA Annual Cost', money(r.costDenza),'<span class="cite-chip">[S1]</span>']);
+    rows.push(['Annual Saving',     money(r.saving),   '<span class="cite-chip">[S1]</span>']);
+  }
+
+  tbody.innerHTML = rows.map(([p, v, s]) =>
+    '<tr><td>' + p + '</td><td>' + v + '</td><td>' + s + '</td></tr>'
+  ).join('');
+}
+
+// =============================================================================
+// INPUT EVENT LISTENERS — slider ↔ number input sync
+// =============================================================================
+
+const sliderKm  = document.getElementById('sliderKm');
+const numKm     = document.getElementById('numKm');
+const dispKm    = document.getElementById('dispKm');
+
+sliderKm.addEventListener('input', () => {
+  S.dailyKm = parseInt(sliderKm.value);
+  numKm.value = S.dailyKm;
+  dispKm.textContent = S.dailyKm + ' km';
+  calculate();
+});
+numKm.addEventListener('input', () => {
+  const v = Math.max(1, Math.min(500, parseInt(numKm.value) || 1));
+  S.dailyKm = v;
+  sliderKm.value = Math.min(v, 200);
+  dispKm.textContent = v + ' km';
+  calculate();
+});
+
+const sliderDays = document.getElementById('sliderDays');
+const numDays    = document.getElementById('numDays');
+const dispDays   = document.getElementById('dispDays');
+
+sliderDays.addEventListener('input', () => {
+  S.days = parseInt(sliderDays.value);
+  numDays.value = S.days;
+  dispDays.textContent = S.days + (S.days === 1 ? ' day' : ' days');
+  calculate();
+});
+numDays.addEventListener('input', () => {
+  const v = Math.max(1, Math.min(7, parseInt(numDays.value) || 1));
+  S.days = v;
+  sliderDays.value = v;
+  dispDays.textContent = v + (v === 1 ? ' day' : ' days');
+  calculate();
+});
+
+document.getElementById('fuelPrice').addEventListener('input', function() {
+  const v = parseFloat(this.value);
+  if (!isNaN(v) && v > 0) { S.fuelPrice = v; calculate(); }
+});
+document.getElementById('elecPrice').addEventListener('input', function() {
+  const v = parseFloat(this.value);
+  if (!isNaN(v) && v > 0) { S.elecPrice = v; calculate(); }
+});
+
+// =============================================================================
+// INTERSECTION OBSERVER — scroll reveals + count-up trigger
+// =============================================================================
+
+// Section reveals
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.14 });
+document.querySelectorAll('.aos').forEach(el => revealObs.observe(el));
+
+// Results section — count-up trigger
+const resultsObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    S.resultsVisible = e.isIntersecting;
+    if (e.isIntersecting && S.results) {
+      countUp(S.results.saving);
+      setTimeout(animateBars, 200);
+    }
+  });
+}, { threshold: 0.18 });
+resultsObs.observe(document.getElementById('results'));
+
+// =============================================================================
+// STICKY HEADER
+// =============================================================================
+
+window.addEventListener('scroll', () => {
+  document.getElementById('siteHeader').classList.toggle('scrolled', window.scrollY > 55);
+}, { passive: true });
+
+// =============================================================================
+// DARK MODE
+// =============================================================================
+
+function toggleTheme() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeToggle').textContent = dark ? 'Dark Mode' : 'Light Mode';
+}
+
+// =============================================================================
+// PDF GENERATION — jsPDF, client-side only
+// =============================================================================
+
+function generatePDF() {
+  if (!S.results || typeof window.jspdf === 'undefined') return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const r = S.results;
+  const L = 20;   // left margin
+  const W = 170;  // content width
+  let y = 0;
+
+  // ---- HEADER BAND ----
+  doc.setFillColor(26, 59, 181);
+  doc.rect(0, 0, 210, 30, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22); doc.setTextColor(255, 255, 255);
+  doc.text('DENZA', L, 14);
+  doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text('SAVINGS CALCULATOR — INDICATIVE ESTIMATE', L, 22);
+  doc.setFontSize(8);
+  doc.text('THE BRAVE GO FIRST', 210 - L, 22, { align: 'right' });
+  y = 40;
+
+  // Date
+  doc.setFontSize(8); doc.setTextColor(130, 130, 130);
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }), L, y);
+  y += 11;
+
+  // ---- Section helper ----
+  function sectionHead(title) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(10, 10, 10);
+    doc.text(title, L, y); y += 5;
+    doc.setDrawColor(220, 220, 220); doc.setLineWidth(0.3);
+    doc.line(L, y, L + W, y); y += 7;
+  }
+
+  function row(label, value, cite) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(10, 10, 10);
+    doc.text(label, L, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(String(value), L + 62, y);
+    if (cite) {
+      doc.setTextColor(26, 59, 181); doc.setFontSize(7);
+      doc.text(cite, L + 62 + doc.getTextWidth(String(value)) + 1.5, y - 0.8);
+      doc.setTextColor(10, 10, 10);
+    }
+    y += 6.5;
+  }
+
+  // ---- VEHICLE COMPARISON ----
+  sectionHead('VEHICLE COMPARISON');
+  row('Current Vehicle:', r.ice.name, '[' + r.ice.cite + ']');
+  const dConsumption = r.denza.type === 'EV'
+    ? r.denza.val + ' kWh/100km'
+    : r.denza.val + ' L/100km + ' + r.denza.wh_km + ' Wh/km (PHEV)';
+  row('DENZA Model:', r.denza.name, '[' + r.denza.cite + ']');
+  row('DENZA Consumption:', dConsumption, '[' + r.denza.cite + ']');
+  y += 4;
+
+  // ---- DRIVING DETAILS ----
+  sectionHead('YOUR DRIVING DETAILS');
+  row('Daily Distance:', S.dailyKm + ' km');
+  row('Days per Week:', S.days + ' days');
+  row('Annual Distance:', r.annKm.toLocaleString('en-AU') + ' km', '[C2]');
+  row('Fuel Price:', '$' + S.fuelPrice.toFixed(2) + ' AUD/Litre', '[P1]');
+  row('Electricity Price:', '$' + S.elecPrice.toFixed(2) + ' AUD/kWh', '[P2]');
+  y += 4;
+
+  // ---- RESULTS BLOCK (dark) ----
+  doc.setFillColor(13, 13, 13);
+  doc.roundedRect(L - 5, y - 4, W + 10, 64, 3, 3, 'F');
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(160, 160, 160);
+  doc.text('WHAT SWITCHING EARNS YOU EVERY YEAR', L, y + 6);
+
+  doc.setFontSize(30); doc.setTextColor(255, 255, 255);
+  doc.text('$' + au(r.saving) + ' AUD', L, y + 20);
+
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(130, 130, 130);
+  doc.text('PER YEAR', L, y + 28);
+
+  // Three metric cols
+  const cols = [L, L + 55, L + 110];
+  const mLabels = ['ANNUAL SAVING', 'MONTHLY SAVING', 'COST REDUCTION'];
+  const mVals   = ['$' + au(r.saving), '$' + au(r.monthly), Math.round(r.pct) + '%'];
+  const mCites  = ['[S1]', '[S2]', '[V1]'];
+  cols.forEach((cx, i) => {
+    doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(130, 130, 130);
+    doc.text(mLabels[i], cx, y + 40);
+    doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255);
+    doc.text(mVals[i], cx, y + 49);
+    doc.setFontSize(7); doc.setTextColor(26, 59, 181);
+    doc.text(mCites[i], cx + doc.getTextWidth(mVals[i]) + 1, y + 47);
+  });
+  y += 72;
+
+  // ---- ASSUMPTIONS ----
+  sectionHead('ASSUMPTIONS & DATA SOURCES');
+  const assumRows = [
+    ['Current Vehicle', r.ice.name + ' — ' + r.ice.l100 + ' L/100km', 'GVG [' + r.ice.cite + ']'],
+    ['DENZA Model', r.denza.name, 'GVG [' + r.denza.cite + ']'],
+    ['Daily Commute', S.dailyKm + ' km', 'User input'],
+    ['Days / Week', S.days + ' days', 'User input'],
+    ['Annual Distance', r.annKm.toLocaleString('en-AU') + ' km', '[C2]'],
+    ['Fuel Price', '$' + S.fuelPrice.toFixed(2) + ' AUD/L', '[P1]'],
+    ['Electricity Price', '$' + S.elecPrice.toFixed(2) + ' AUD/kWh', '[P2]'],
+    ['ICE Annual Cost', '$' + au(r.costICE) + ' AUD', '[C1]'],
+    ['DENZA Annual Cost', '$' + au(r.costDenza) + ' AUD', '[S1]']
+  ];
+  assumRows.forEach(([p, v, s]) => {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(10, 10, 10);
+    doc.text(p, L, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(v, L + 52, y);
+    doc.setTextColor(120, 120, 120);
+    doc.text(s, L + 125, y);
+    y += 6;
+  });
+  y += 6;
+
+  // ---- FORMULA KEY ----
+  if (y < 248) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(130, 130, 130);
+    doc.text('FORMULA KEY', L, y); y += 5;
+    const formulas = [
+      '[C2] Annual km = Daily km × Days/week × 52',
+      '[C1] ICE Annual Cost = Annual km × (L/100km ÷ 100) × Fuel price',
+      r.denza.type === 'EV'
+        ? '[S1] DENZA Annual Cost = (Annual km ÷ 100) × kWh/100km × Electricity price'
+        : '[S1] DENZA Annual Cost = Annual km × (L/100km ÷ 100 × Fuel price + Wh/km ÷ 1000 × Electricity price)',
+      '[S2] Monthly Saving = Annual Saving ÷ 12',
+      '[V1] % Saving = (Annual Saving ÷ ICE Annual Cost) × 100'
+    ];
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(110, 110, 110);
+    formulas.forEach(f => { doc.text(f, L, y); y += 5; });
+    y += 4;
+  }
+
+  // ---- DISCLAIMER ----
+  doc.setDrawColor(26, 59, 181); doc.setLineWidth(0.9);
+  doc.line(L, y, L, y + 22); doc.setLineWidth(0.2);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(10, 10, 10);
+  doc.text('GENERAL ESTIMATE ONLY', L + 4, y + 6);
+  doc.setFont('helvetica', 'normal'); doc.setTextColor(120, 120, 120);
+  const dText = 'This calculator provides indicative figures and does not constitute financial advice. Results are based on user-provided inputs and national averages. Individual results will vary. Not a substitute for professional financial or automotive advice.';
+  doc.text(doc.splitTextToSize(dText, W - 8), L + 4, y + 13);
+
+  // ---- PAGE FOOTER ----
+  const ph = doc.internal.pageSize.getHeight();
+  doc.setFontSize(7); doc.setTextColor(180, 180, 180);
+  doc.text('General estimates only. Not financial advice. Data sources: ABS, DISER, AEMO, Green Vehicle Guide.', L, ph - 8);
+
+  // Save
+  const fname = 'DENZA_Savings_' + r.denza.name.replace(/ /g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+  doc.save(fname);
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+
+renderICE();
+renderDenza();
+updateAssumptions();
+</script>
+</body>
+</html>
