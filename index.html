@@ -460,6 +460,30 @@
       padding: 1.4rem 2rem; text-align: center;
     }
     .site-footer p { font-size: 0.73rem; color: var(--muted); }
+
+    /* ===== ICE DROPDOWN ===== */
+    .ice-select-wrap { position: relative; }
+    .ice-select {
+      width: 100%; padding: 0.85rem 2.5rem 0.85rem 1rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 700; font-size: 0.95rem; letter-spacing: 0.05em;
+      color: var(--black); background: var(--input-bg);
+      border: 1.5px solid var(--card-border); border-radius: 6px;
+      appearance: none; -webkit-appearance: none;
+      outline: none; cursor: pointer; transition: border-color 0.2s;
+    }
+    .ice-select:focus, .ice-select.has-value { border-color: var(--blue); }
+    .ice-select-chevron {
+      position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);
+      pointer-events: none; width: 10px; height: 10px;
+      border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+      transform: translateY(-65%) rotate(45deg);
+    }
+    .ice-select-cite {
+      display: none; margin-top: 0.5rem;
+      font-size: 0.72rem; color: var(--muted);
+    }
+    .ice-select-cite.visible { display: block; }
   </style>
 </head>
 <body>
@@ -493,8 +517,8 @@
     </div>
     <div class="selection-cols">
       <div class="aos d1">
-        <div class="col-label">Your Current Vehicle</div>
-        <div class="cards-stack" id="iceGrid"></div>
+        <div class="col-label">Your Current Vehicle Type</div>
+        <div id="iceDropdownWrap"></div>
       </div>
       <div class="aos d2">
         <div class="col-label">Your New DENZA</div>
@@ -502,8 +526,8 @@
       </div>
     </div>
     <p class="segment-note aos d3">
-      For accurate comparisons, use vehicles of the same segment (e.g. large SUV vs large SUV).
-      Recommended pairings: D9 AWD ↔ Average Large MPV &nbsp;·&nbsp; B5 ↔ Average Mid-Size SUV &nbsp;·&nbsp; B8 ↔ Average Large SUV or Average Luxury SUV.
+      For accurate comparisons, use vehicles of the same segment.
+      Recommended pairings: D9 AWD ↔ Average People Mover or Average Large SUV &nbsp;·&nbsp; B5 ↔ Average Small SUV or Average Medium SUV &nbsp;·&nbsp; B8 ↔ Average Large SUV or Average Medium SUV
     </p>
   </div>
 </section>
@@ -618,10 +642,18 @@
       <li><span class="cite-key">[S1] PHEV</span><span>DENZA Annual Cost = Annual km × (L/100km ÷ 100 × Fuel price + Wh/km ÷ 1000 × Electricity price)</span></li>
       <li><span class="cite-key">[S2]</span><span>Monthly Saving = Annual Saving ÷ 12</span></li>
       <li><span class="cite-key">[V1]</span><span>% Saving = (Annual Saving ÷ ICE Annual Cost) × 100</span></li>
-      <li><span class="cite-key">[I1]</span><span>Average Large SUV — 8.9 L/100km — Green Vehicle Guide (Diesel, 3.3L 6cyl Turbo, 10-spd Auto, 4WD)</span></li>
-      <li><span class="cite-key">[I2]</span><span>Average Mid-Size SUV — 7.6 L/100km — Green Vehicle Guide (Diesel, 2.8L 4cyl Turbo, 8-spd Auto, 4WD)</span></li>
-      <li><span class="cite-key">[I3]</span><span>Average Luxury SUV — 9.9 L/100km — Green Vehicle Guide (Petrol 95RON, 3.0L 6cyl Turbo, 8-spd Auto, 4WD)</span></li>
-      <li><span class="cite-key">[I4]</span><span>Average Large MPV — 9.6 L/100km — Green Vehicle Guide (Petrol 91RON, 3.5L 6cyl, 8-spd Auto)</span></li>
+      <li><span class="cite-key">[I1]</span><span>Average Light Car — 5.9 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC Lifecycle Emissions Calculator Explainer, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I2]</span><span>Average Small Car — 7.5 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I3]</span><span>Average Medium Car — 7.9 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I4]</span><span>Average Large Car — 8.0 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I5]</span><span>Average Upper Large Car — 9.6 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I6]</span><span>Average Small SUV — 7.3 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I7]</span><span>Average Medium SUV — 8.3 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I8]</span><span>Average Large SUV — 9.1 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I9]</span><span>Average People Mover — 8.9 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I10]</span><span>Average Small Van — 7.8 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I11]</span><span>Average Large Van — 8.8 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
+      <li><span class="cite-key">[I12]</span><span>Average Ute — 9.3 L/100km (Petrol, WLTP) — <a href="https://electricvehiclecouncil.com.au/wp-content/uploads/2023/11/EVC-Lifecycle-Emissions-Calculator-Explainer.pdf" target="_blank">EVC, Table 1, Nov 2023</a></span></li>
       <li><span class="cite-key">[D1]</span><span>Denza D9 AWD — 25.6 kWh/100km — GVG / MY26 spec sheet (derived: 103.36 kWh ÷ 480 km WLTC × 1000). Pure EV.</span></li>
       <li><span class="cite-key">[D2]</span><span>Denza B5 — 1.9 L/100km + 233 Wh/km — GVG / MY26 spec sheet (PHEV combined, SOC 25%–100%)</span></li>
       <li><span class="cite-key">[D3]</span><span>Denza B8 — 2.0 L/100km + 244 Wh/km — GVG / MY26 spec sheet (PHEV combined, SOC 25%–100%)</span></li>
@@ -675,10 +707,18 @@ const DENZA_PHEV = {
 };
 
 const ICE_SEGMENTS = {
-  "AVERAGE LARGE SUV":    { name: "Average Large SUV",    l100: 8.9, fuel: "Diesel",       cite: "I1" },
-  "AVERAGE MID-SIZE SUV": { name: "Average Mid-Size SUV", l100: 7.6, fuel: "Diesel",       cite: "I2" },
-  "AVERAGE LUXURY SUV":   { name: "Average Luxury SUV",   l100: 9.9, fuel: "Petrol 95RON", cite: "I3" },
-  "AVERAGE LARGE MPV":    { name: "Average Large MPV",    l100: 9.6, fuel: "Petrol 91RON", cite: "I4" }
+  "AVERAGE LIGHT CAR":       { name: "Average Light Car",       l100: 5.9, cite: "I1"  },
+  "AVERAGE SMALL CAR":       { name: "Average Small Car",       l100: 7.5, cite: "I2"  },
+  "AVERAGE MEDIUM CAR":      { name: "Average Medium Car",      l100: 7.9, cite: "I3"  },
+  "AVERAGE LARGE CAR":       { name: "Average Large Car",       l100: 8.0, cite: "I4"  },
+  "AVERAGE UPPER LARGE CAR": { name: "Average Upper Large Car", l100: 9.6, cite: "I5"  },
+  "AVERAGE SMALL SUV":       { name: "Average Small SUV",       l100: 7.3, cite: "I6"  },
+  "AVERAGE MEDIUM SUV":      { name: "Average Medium SUV",      l100: 8.3, cite: "I7"  },
+  "AVERAGE LARGE SUV":       { name: "Average Large SUV",       l100: 9.1, cite: "I8"  },
+  "AVERAGE PEOPLE MOVER":    { name: "Average People Mover",    l100: 8.9, cite: "I9"  },
+  "AVERAGE SMALL VAN":       { name: "Average Small Van",       l100: 7.8, cite: "I10" },
+  "AVERAGE LARGE VAN":       { name: "Average Large Van",       l100: 8.8, cite: "I11" },
+  "AVERAGE UTE":             { name: "Average Ute",             l100: 9.3, cite: "I12" },
 };
 
 const ALL_DENZA = Object.assign({}, DENZA_EV, DENZA_PHEV);
@@ -703,18 +743,36 @@ const S = {
 // =============================================================================
 
 function renderICE() {
-  const grid = document.getElementById('iceGrid');
-  grid.innerHTML = '';
-  for (const [key, seg] of Object.entries(ICE_SEGMENTS)) {
-    const el = document.createElement('div');
-    el.className = 'v-card' + (S.ice === key ? ' selected' : '');
-    el.innerHTML =
-      '<div class="v-card-label">' + key + '</div>' +
-      '<div class="v-card-sub">' + seg.l100 + ' L/100km' +
-      ' <span class="cite-chip">[' + seg.cite + ']</span></div>';
-    el.addEventListener('click', () => { S.ice = key; renderICE(); calculate(); });
-    grid.appendChild(el);
-  }
+  const wrap = document.getElementById('iceDropdownWrap');
+  wrap.innerHTML =
+    '<div class="ice-select-wrap">' +
+      '<select class="ice-select' + (S.ice ? ' has-value' : '') + '" id="iceSelect">' +
+        '<option value="">— Select your current vehicle type —</option>' +
+        Object.entries(ICE_SEGMENTS).map(([key, seg]) =>
+          '<option value="' + key + '"' + (S.ice === key ? ' selected' : '') + '>' +
+          seg.name + ' — ' + seg.l100 + ' L/100km' +
+          '</option>'
+        ).join('') +
+      '</select>' +
+      '<span class="ice-select-chevron"></span>' +
+    '</div>' +
+    '<div class="ice-select-cite' + (S.ice ? ' visible' : '') + '" id="iceSelectCite">' +
+      (S.ice ? 'Source: EVC Table 1, Nov 2023 <span class="cite-chip">[' + ICE_SEGMENTS[S.ice].cite + ']</span>' : '') +
+    '</div>';
+
+  document.getElementById('iceSelect').addEventListener('change', function() {
+    S.ice = this.value || null;
+    this.classList.toggle('has-value', !!S.ice);
+    const cite = document.getElementById('iceSelectCite');
+    if (S.ice) {
+      cite.innerHTML = 'Source: EVC Table 1, Nov 2023 <span class="cite-chip">[' + ICE_SEGMENTS[S.ice].cite + ']</span>';
+      cite.classList.add('visible');
+    } else {
+      cite.innerHTML = '';
+      cite.classList.remove('visible');
+    }
+    calculate();
+  });
 }
 
 function renderDenza() {
@@ -1115,7 +1173,7 @@ function generatePDF() {
   // ---- ASSUMPTIONS ----
   sectionHead('ASSUMPTIONS & DATA SOURCES');
   const assumRows = [
-    ['Current Vehicle', r.ice.name + ' — ' + r.ice.l100 + ' L/100km', 'GVG [' + r.ice.cite + ']'],
+    ['Current Vehicle', r.ice.name + ' — ' + r.ice.l100 + ' L/100km', 'EVC Table 1, Nov 2023 [' + r.ice.cite + ']'],
     ['DENZA Model', r.denza.name, 'GVG [' + r.denza.cite + ']'],
     ['Daily Commute', S.dailyKm + ' km', 'User input'],
     ['Days / Week', S.days + ' days', 'User input'],
@@ -1147,7 +1205,8 @@ function generatePDF() {
         ? '[S1] DENZA Annual Cost = (Annual km ÷ 100) × kWh/100km × Electricity price'
         : '[S1] DENZA Annual Cost = Annual km × (L/100km ÷ 100 × Fuel price + Wh/km ÷ 1000 × Electricity price)',
       '[S2] Monthly Saving = Annual Saving ÷ 12',
-      '[V1] % Saving = (Annual Saving ÷ ICE Annual Cost) × 100'
+      '[V1] % Saving = (Annual Saving ÷ ICE Annual Cost) × 100',
+      '[I1–I12] ICE segment averages — EVC Lifecycle Emissions Calculator Explainer, Table 1, Nov 2023. Petrol, WLTP.'
     ];
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(110, 110, 110);
     formulas.forEach(f => { doc.text(f, L, y); y += 5; });
